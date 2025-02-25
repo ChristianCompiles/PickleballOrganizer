@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickleball Player Tracker</title>
+    <link rel="stylesheet" href="styles-css.css">
+</head>
+<body>
+    <div class="container">
+        <div id="login-container">
+            <h1>Pickleball Player Tracker</h1>
+            <div class="login-form">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button id="login-btn">Login</button>
+                <button id="register-btn">Register</button>
+            </div>
+        </div>
+
+        <div id="app-container" class="hidden">
+            <div class="nav-bar">
+                <div class="welcome-msg" id="welcome-message">Welcome!</div>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="players-tab">Player Management</div>
+                <div class="tab" data-tab="court-tab">Court Assignment</div>
+            </div>
+            
+            <div id="players-tab" class="tab-content active">
+                <h1>My Pickleball Players</h1>
+                
+                <div class="player-form">
+                    <input type="text" id="player-name" placeholder="Player Name" required>
+                    <select id="skill-level">
+                        <option value="1.0">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2.0">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3.0">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4.0">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5.0">5.0</option>
+                        <option value="5.5">5.5</option>
+                    </select>
+                    <button id="add-player-btn">Add Player</button>
+                </div>
+                
+                <div id="players-list"></div>
+            </div>
+            
+            <div id="court-tab" class="tab-content">
+                <h1>Court Assignment</h1>
+                
+                <div class="columns-container">
+                    <div class="column">
+                        <h2>Present Players</h2>
+                        <div class="column-content" id="present-players"></div>
+                    </div>
+                    
+                    <div class="column">
+                        <h2>Vacant</h2>
+                        <div class="column-content" id="vacant-players"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script-js.js"></script>
+</body>
+</html>
