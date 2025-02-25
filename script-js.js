@@ -449,111 +449,68 @@ function checkAllMatchesFinished() {
     return allFinished;
 }
 
-// Create next round of games with winning teams AND losing teams
 function createNextRound() {
+    const numCourts = parseInt(document.getElementById('num-courts').value);
     const users = JSON.parse(localStorage.getItem('users'));
     const courts = users[currentUser].courts;
-    const players = users[currentUser].players;
     
-    // Collect all winning teams and losing teams
-    const winningTeams = [];
-    const losingTeams = [];
-    
+    // Collect winners and losers
+    const winners = [], losers = [];
     courts.forEach(court => {
         if (court.status === 'finished' && court.winner !== null) {
             const winningTeam = court.winner === 0 ? court.team1 : court.team2;
             const losingTeam = court.winner === 0 ? court.team2 : court.team1;
             
-            if (winningTeam.length === 2) {
-                winningTeams.push({
-                    courtNumber: court.courtNumber,
-                    players: winningTeam
-                });
-            }
-            
-            if (losingTeam.length === 2) {
-                losingTeams.push({
-                    courtNumber: court.courtNumber,
-                    players: losingTeam
-                });
-            }
+            if (winningTeam.length === 2) winners.push({ court: court.courtNumber, players: winningTeam });
+            if (losingTeam.length === 2) losers.push({ court: court.courtNumber, players: losingTeam });
         }
     });
     
-    // Need at least 2 winning teams to create matches for winners
-    if (winningTeams.length < 2) {
+    if (winners.length < 2) {
         alert('Need at least 2 winning teams to create the next round.');
         return;
     }
     
-    // Sort teams by court number for predictable assignment
-    winningTeams.sort((a, b) => a.courtNumber - b.courtNumber);
-    losingTeams.sort((a, b) => a.courtNumber - b.courtNumber);
+    // Reset courts
+    courts.forEach(court => Object.assign(court, { team1: [], team2: [], winner: null, status: 'waiting' }));
     
-    // Reset all courts first
-    courts.forEach(court => {
-        court.team1 = [];
-        court.team2 = [];
-        court.winner = null;
-        court.status = 'waiting';
-    });
-    
-    // Helper function to create teams with split teammates
-    function createTeamsWithSplitTeammates(teams, startCourtIndex) {
+    function splitAndAssign(teams, startIndex) {
         if (teams.length < 2) return;
         
-        // Create arrays to hold each position from the teams
-        const playerPosition1 = [];
-        const playerPosition2 = [];
-        
-        // Split each team into positions
-        teams.forEach(team => {
-            playerPosition1.push(team.players[0]);
-            playerPosition2.push(team.players[1]);
-        });
-        
-        // Helper function to shuffle array
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        let players = teams.flatMap(t => t.players);
+
+        let index = 0; // to iterate over 4 players at a time
+        for (let i = startIndex; i < courts.length && index + 1 < players.length; i++) {
+
+            let p1 = players[index], p2 = players[index + 1];
+            
+            let rand_int = Math.floor(Math.random() * 2);
+            console.log(rand_int);
+            if (rand_int === 0)
+            {
+                courts[i].team1 = [p1, players[index+2]]
+                courts[i].team2 = [p2, players[index + 3]];
             }
-            return array;
-        }
-        
-        // Shuffle each position group separately
-        shuffleArray(playerPosition1);
-        shuffleArray(playerPosition2);
-        
-        // Assign to courts - each player from position1 gets paired with a player from position2
-        let courtIndex = startCourtIndex;
-        for (let i = 0; i < Math.floor(teams.length / 2); i++) {
-            if (courtIndex < courts.length) {
-                // First court gets 2 players from position1 and 2 players from position2
-                courts[courtIndex].team1 = [playerPosition1[i*2], playerPosition2[i*2]];
-                courts[courtIndex].team2 = [playerPosition1[i*2+1], playerPosition2[i*2+1]];
-                courts[courtIndex].status = 'playing';
-                courtIndex++;
+            else
+            {
+                courts[i].team1 = [p1, players[index+3]]
+                courts[i].team2 = [p2, players[index + 2]];
             }
+                
+            courts[i].status = 'playing';
+            index += 4;
         }
     }
     
-    // Determine how many courts to use for winners vs losers
-    const totalCourts = courts.length;
-    const winnerCourts = Math.min(Math.floor(winningTeams.length / 2), totalCourts);
+    // Winners move up, unless at top
+    winners.forEach(team => team.court = Math.min(team.court + 1, numCourts - 1));
+    splitAndAssign(winners, 0);
     
-    // Assign winner teams to first set of courts
-    createTeamsWithSplitTeammates(winningTeams, 0);
+    // Losers move down, unless at bottom
+    losers.forEach(team => team.court = Math.max(team.court - 1, 0));
+    splitAndAssign(losers, Math.ceil(numCourts / 2));
     
-    // Assign loser teams to next set of courts
-    if (losingTeams.length >= 2) {
-        createTeamsWithSplitTeammates(losingTeams, winnerCourts);
-    }
-    
-    // Reset all matches finished flag
     users[currentUser].allMatchesFinished = false;
-    
-    // Save to local storage
     localStorage.setItem('users', JSON.stringify(users));
     displayColumnPlayers();
 }
